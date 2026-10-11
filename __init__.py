@@ -305,6 +305,13 @@ def upload_solver_file():
     if not file or not file.filename:
         return jsonify({"success": False, "error": "Nama file kosong"}), 400
 
+    # Max 5MB backend validation
+    file.seek(0, os.SEEK_END)
+    file_size = file.tell()
+    file.seek(0)
+    if file_size > 5 * 1024 * 1024:
+        return jsonify({"success": False, "error": "Ukuran file melebihi batas 5MB"}), 400
+
     user = get_current_user()
     orig_filename = os.path.basename(file.filename)
     safe_name = re.sub(r"[^a-zA-Z0-9_.-]", "_", orig_filename)

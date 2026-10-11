@@ -62,7 +62,7 @@
           'accept=".py,.sh,.txt,.c,.cpp,.java,.go,.rb,.rs,.zip" ' +
           'style="font-size: 13.5px; border-radius: 12px; background: rgba(0, 0, 0, 0.035); border: 1px solid rgba(0, 0, 0, 0.12);">' +
         '<small class="form-text text-muted" style="font-size: 11.5px; color: #86868b; display: block; margin-top: 4px;">' +
-          'Unggah file solver/script exploit kamu (.py, .sh, .txt, .zip, maks 10MB).' +
+          'Unggah file solver/script exploit kamu (.py, .sh, .txt, .zip, maks 5MB).' +
         '</small>';
       submitRow.parentNode.insertBefore(fileContainer, submitRow);
     }
@@ -110,8 +110,8 @@
       }
 
       var solverFile = fileInput.files[0];
-      if (solverFile.size > 10 * 1024 * 1024) {
-        showAlert("Ukuran file solver melebihi batas 10MB.");
+      if (solverFile.size > 5 * 1024 * 1024) {
+        showAlert("Ukuran file solver melebihi batas 5MB.");
         return Promise.resolve({
           success: true,
           data: { status: "unknown", message: "" },
