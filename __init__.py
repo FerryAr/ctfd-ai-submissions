@@ -169,6 +169,48 @@ class AiSubmissionDynamicChallenge(DynamicValueChallenge, AiSubmissionStandardCh
     name = "dynamic"
 
 
+
+def patch_dynamic_iac():
+    if "dynamic_iac" in CHALLENGE_CLASSES:
+        cls = CHALLENGE_CLASSES["dynamic_iac"]
+        if not getattr(cls, "_ai_link_patched", False):
+            orig_solve = cls.solve
+            
+            @classmethod
+            def solve_hook(c, user, team, challenge, request):
+                orig_solve(user, team, challenge, request)
+                try:
+                    ai_link = AiSubmissionStandardChallenge._get_ai_link(request)
+                    last_solve = Solves.query.filter_by(
+                        user_id=user.id, challenge_id=challenge.id
+                    ).order_by(Solves.id.desc()).first()
+                    if last_solve and not AiLinks.query.filter_by(submission_id=last_solve.id).first():
+                        db.session.add(AiLinks(submission_id=last_solve.id, value=ai_link))
+                        db.session.commit()
+                except Exception:
+                    db.session.rollback()
+
+            cls.solve = solve_hook
+
+            orig_fail = getattr(cls, "fail", None)
+            if orig_fail:
+                @classmethod
+                def fail_hook(c, user, team, challenge, request):
+                    orig_fail(user, team, challenge, request)
+                    try:
+                        ai_link = AiSubmissionStandardChallenge._get_ai_link(request)
+                        last_fail = Fails.query.filter_by(
+                            user_id=user.id, challenge_id=challenge.id
+                        ).order_by(Fails.id.desc()).first()
+                        if last_fail and not AiLinks.query.filter_by(submission_id=last_fail.id).first():
+                            db.session.add(AiLinks(submission_id=last_fail.id, value=ai_link))
+                            db.session.commit()
+                    except Exception:
+                        db.session.rollback()
+                cls.fail = fail_hook
+
+            cls._ai_link_patched = True
+
 def validate_and_swap():
     """
     Registered as a before_request handler.
@@ -188,6 +230,8 @@ def validate_and_swap():
         CHALLENGE_CLASSES["standard"] = AiSubmissionStandardChallenge
     if CHALLENGE_CLASSES.get("dynamic") is not AiSubmissionDynamicChallenge:
         CHALLENGE_CLASSES["dynamic"] = AiSubmissionDynamicChallenge
+    patch_dynamic_iac()
+    patch_dynamic_iac()
 
     if request.method != "POST" or request.path != "/api/v1/challenges/attempt":
         return None
@@ -301,5 +345,6 @@ def load(app):
     # validate_and_swap() because dynamic_challenges.load() overwrites it later.
     CHALLENGE_CLASSES["standard"] = AiSubmissionStandardChallenge
     CHALLENGE_CLASSES["dynamic"] = AiSubmissionDynamicChallenge
+    patch_dynamic_iac()
 
     app.before_request(validate_and_swap)
