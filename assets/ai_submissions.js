@@ -106,7 +106,7 @@
         showAlert("Link percakapan AI wajib diisi sebelum submit flag.");
         return Promise.resolve({
           success: true,
-          data: { status: "unknown", message: "" },
+          data: { status: "incorrect", message: "Link percakapan AI wajib diisi sebelum submit flag." },
         });
       }
 
@@ -114,7 +114,7 @@
         showAlert("Link AI tidak diizinkan! Hanya diperbolehkan link share resmi dari ChatGPT (chatgpt.com/share/...) atau Gemini (gemini.google.com/share/...).");
         return Promise.resolve({
           success: true,
-          data: { status: "unknown", message: "" },
+          data: { status: "incorrect", message: "Link percakapan AI wajib diisi sebelum submit flag." },
         });
       }
 
@@ -123,7 +123,7 @@
         showAlert("File solver wajib diunggah sebelum submit flag.");
         return Promise.resolve({
           success: true,
-          data: { status: "unknown", message: "" },
+          data: { status: "incorrect", message: "Link percakapan AI wajib diisi sebelum submit flag." },
         });
       }
 
@@ -132,7 +132,7 @@
         showAlert("Format file solver ditolak! Hanya file berekstensi .py, .sh, atau .txt yang diperbolehkan.");
         return Promise.resolve({
           success: true,
-          data: { status: "unknown", message: "" },
+          data: { status: "incorrect", message: "Link percakapan AI wajib diisi sebelum submit flag." },
         });
       }
 
@@ -140,7 +140,7 @@
         showAlert("Ukuran file solver melebihi batas 5MB.");
         return Promise.resolve({
           success: true,
-          data: { status: "unknown", message: "" },
+          data: { status: "incorrect", message: "Link percakapan AI wajib diisi sebelum submit flag." },
         });
       }
 
@@ -176,7 +176,7 @@
         showAlert("Terjadi kesalahan jaringan saat mengunggah file solver.");
         return Promise.resolve({
           success: true,
-          data: { status: "unknown", message: "" },
+          data: { status: "incorrect", message: "Link percakapan AI wajib diisi sebelum submit flag." },
         });
       }
     };

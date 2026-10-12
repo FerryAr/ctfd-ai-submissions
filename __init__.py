@@ -262,9 +262,15 @@ def validate_and_swap():
     if not ai_link:
         return (
             jsonify(
-                {"success": False, "errors": {"ai_link": ["Link percakapan AI wajib diisi"]}}
+                {
+                    "success": True,
+                    "data": {
+                        "status": "incorrect",
+                        "message": "Link percakapan AI wajib diisi sebelum submit flag!",
+                    },
+                }
             ),
-            400,
+            200,
         )
 
     parsed = urlparse(ai_link)
@@ -272,11 +278,14 @@ def validate_and_swap():
         return (
             jsonify(
                 {
-                    "success": False,
-                    "errors": {"ai_link": ["Link percakapan AI harus berupa URL yang valid"]},
+                    "success": True,
+                    "data": {
+                        "status": "incorrect",
+                        "message": "Link percakapan AI harus berupa URL yang valid (http/https).",
+                    },
                 }
             ),
-            400,
+            200,
         )
 
     # Restrict strictly to ChatGPT and Gemini Free share links
@@ -288,19 +297,28 @@ def validate_and_swap():
         return (
             jsonify(
                 {
-                    "success": False,
-                    "errors": {"ai_link": ["Link AI tidak valid! Hanya diperbolehkan link share resmi dari ChatGPT (chatgpt.com/share/...) atau Gemini (gemini.google.com/share/...)"]},
+                    "success": True,
+                    "data": {
+                        "status": "incorrect",
+                        "message": "Link AI tidak valid! Hanya diperbolehkan link share resmi dari ChatGPT (chatgpt.com/share/...) atau Gemini (gemini.google.com/share/...)",
+                    },
                 }
             ),
-            400,
+            200,
         )
 
     if not solver_file:
         return (
             jsonify(
-                {"success": False, "errors": {"solver_file": ["File solver wajib diunggah"]}}
+                {
+                    "success": True,
+                    "data": {
+                        "status": "incorrect",
+                        "message": "File solver (.py, .sh, .txt) wajib diunggah sebelum submit flag!",
+                    },
+                }
             ),
-            400,
+            200,
         )
 
     return None
