@@ -291,8 +291,8 @@ def validate_and_swap():
     # Restrict strictly to ChatGPT and Gemini Free share links
     host = parsed.netloc.lower()
     path = parsed.path
-    is_chatgpt = (host == "chatgpt.com" or host.endswith(".chatgpt.com") or host == "chat.openai.com") and path.startswith("/share/")
-    is_gemini = host == "gemini.google.com" and path.startswith("/share/")
+    is_chatgpt = (host in ("chatgpt.com", "www.chatgpt.com", "chat.openai.com") or host.endswith(".chatgpt.com")) and path.startswith("/share/")
+    is_gemini = (host == "share.gemini.google" and len(path.strip("/")) > 0) or (host == "gemini.google.com" and path.startswith("/share/"))
     if not (is_chatgpt or is_gemini):
         return (
             jsonify(

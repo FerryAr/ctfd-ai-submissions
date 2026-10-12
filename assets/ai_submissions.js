@@ -8,14 +8,21 @@
       var u = new URL(value);
       if (u.protocol !== "https:" && u.protocol !== "http:") return false;
       var host = u.hostname.toLowerCase();
+      var path = u.pathname;
+
       // ChatGPT: chatgpt.com/share/... or chat.openai.com/share/...
       if (host === "chatgpt.com" || host.endsWith(".chatgpt.com") || host === "chat.openai.com") {
-        return u.pathname.startsWith("/share/");
+        return path.startsWith("/share/");
       }
-      // Gemini: gemini.google.com/share/...
-      if (host === "gemini.google.com") {
-        return u.pathname.startsWith("/share/");
+
+      // Gemini: share.gemini.google/<id> or gemini.google.com/share/...
+      if (host === "share.gemini.google" && path.length > 1) {
+        return true;
       }
+      if (host === "gemini.google.com" && path.startsWith("/share/")) {
+        return true;
+      }
+
       return false;
     } catch (e) {
       return false;
@@ -64,7 +71,7 @@
             '<span style="color: #ef4444; font-weight: bold;">*</span>' +
           '</label>' +
           '<input class="form-control rounded-3 py-2 px-3" type="url" id="challenge-ai-link" name="ai_link" ' +
-            'placeholder="https://chatgpt.com/share/... atau https://gemini.google.com/share/..." autocomplete="off" ' +
+            'placeholder="https://chatgpt.com/share/... atau https://share.gemini.google/..." autocomplete="off" ' +
             'style="font-size: 13.5px; border-radius: 12px; background: rgba(0, 0, 0, 0.035); border: 1px solid rgba(0, 0, 0, 0.12);">' +
           '<small class="form-text text-muted" style="font-size: 11px; color: #86868b; display: block; margin-top: 4px;">' +
             'Wajib link share percakapan resmi ChatGPT atau Gemini Free.' +
