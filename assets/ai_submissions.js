@@ -18,7 +18,7 @@
     }
   }
 
-  function ensureInputs() {
+    function ensureInputs() {
     var modal = document.querySelector("#challenge-window");
     if (!modal) return;
 
@@ -29,42 +29,39 @@
     var submitRow = modal.querySelector(".submit-row");
     if (!submitRow) return;
 
-    // AI Link Container
-    if (!document.querySelector("#challenge-ai-link")) {
-      var aiContainer = document.createElement("div");
-      aiContainer.className = "mb-3 ai-link-row";
-      aiContainer.innerHTML = 
-        '<label class="form-label small fw-semibold" for="challenge-ai-link" style="color: #1d1d1f; display: flex; align-items: center; gap: 4px;">' +
-          '<i class="fas fa-robot text-success me-1"></i>' +
-          '<span>AI Conversation Link</span>' +
-          '<span style="color: #ef4444; font-weight: bold;">*</span>' +
-        '</label>' +
-        '<input class="form-control rounded-3 py-2 px-3" type="url" id="challenge-ai-link" name="ai_link" ' +
-          'placeholder="https://chatgpt.com/share/... atau https://claude.ai/share/..." autocomplete="off" ' +
-          'style="font-size: 13.5px; border-radius: 12px; background: rgba(0, 0, 0, 0.035); border: 1px solid rgba(0, 0, 0, 0.12);">' +
-        '<small class="form-text text-muted" style="font-size: 11.5px; color: #86868b; display: block; margin-top: 4px;">' +
-          'Wajib melampirkan link share percakapan AI resmi (ChatGPT / Claude / Gemini).' +
-        '</small>';
-      submitRow.parentNode.insertBefore(aiContainer, submitRow);
-    }
-
-    // Solver File Container
-    if (!document.querySelector("#challenge-solver-file")) {
-      var fileContainer = document.createElement("div");
-      fileContainer.className = "mb-3 solver-file-row";
-      fileContainer.innerHTML = 
-        '<label class="form-label small fw-semibold" for="challenge-solver-file" style="color: #1d1d1f; display: flex; align-items: center; gap: 4px;">' +
-          '<i class="fas fa-file-code text-primary me-1"></i>' +
-          '<span>File Solver / Script Exploit</span>' +
-          '<span style="color: #ef4444; font-weight: bold;">*</span>' +
-        '</label>' +
-        '<input class="form-control rounded-3 py-2 px-3" type="file" id="challenge-solver-file" name="solver_file" ' +
-          'accept=".py,.sh,.txt,.c,.cpp,.java,.go,.rb,.rs,.zip" ' +
-          'style="font-size: 13.5px; border-radius: 12px; background: rgba(0, 0, 0, 0.035); border: 1px solid rgba(0, 0, 0, 0.12);">' +
-        '<small class="form-text text-muted" style="font-size: 11.5px; color: #86868b; display: block; margin-top: 4px;">' +
-          'Unggah file solver/script exploit kamu (.py, .sh, .txt, .zip, maks 5MB).' +
-        '</small>';
-      submitRow.parentNode.insertBefore(fileContainer, submitRow);
+    // Check if grid wrapper already exists
+    var gridRow = modal.querySelector(".ai-solver-grid");
+    if (!gridRow) {
+      gridRow = document.createElement("div");
+      gridRow.className = "row g-3 mb-3 ai-solver-grid";
+      gridRow.innerHTML = 
+        '<div class="col-12 col-md-6 ai-link-col">' +
+          '<label class="form-label small fw-semibold" for="challenge-ai-link" style="color: #1d1d1f; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">' +
+            '<i class="fas fa-robot text-success me-1"></i>' +
+            '<span>AI Conversation Link</span>' +
+            '<span style="color: #ef4444; font-weight: bold;">*</span>' +
+          '</label>' +
+          '<input class="form-control rounded-3 py-2 px-3" type="url" id="challenge-ai-link" name="ai_link" ' +
+            'placeholder="https://chatgpt.com/share/..." autocomplete="off" ' +
+            'style="font-size: 13.5px; border-radius: 12px; background: rgba(0, 0, 0, 0.035); border: 1px solid rgba(0, 0, 0, 0.12);">' +
+          '<small class="form-text text-muted" style="font-size: 11px; color: #86868b; display: block; margin-top: 4px;">' +
+            'Link share percakapan AI resmi.' +
+          '</small>' +
+        '</div>' +
+        '<div class="col-12 col-md-6 solver-file-col">' +
+          '<label class="form-label small fw-semibold" for="challenge-solver-file" style="color: #1d1d1f; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">' +
+            '<i class="fas fa-file-code text-primary me-1"></i>' +
+            '<span>File Solver Script</span>' +
+            '<span style="color: #ef4444; font-weight: bold;">*</span>' +
+          '</label>' +
+          '<input class="form-control rounded-3 py-2 px-3" type="file" id="challenge-solver-file" name="solver_file" ' +
+            'accept=".py,.sh,.txt,.c,.cpp,.java,.go,.rb,.rs,.zip" ' +
+            'style="font-size: 13.5px; border-radius: 12px; background: rgba(0, 0, 0, 0.035); border: 1px solid rgba(0, 0, 0, 0.12);">' +
+          '<small class="form-text text-muted" style="font-size: 11px; color: #86868b; display: block; margin-top: 4px;">' +
+            'Script exploit (.py/.sh/.zip, maks 5MB).' +
+          '</small>' +
+        '</div>';
+      submitRow.parentNode.insertBefore(gridRow, submitRow);
     }
   }
 
