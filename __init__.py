@@ -410,6 +410,7 @@ def load(app):
     register_admin_plugin_script("/plugins/ai_submissions/assets/ai_submissions_admin.js")
 
     app.register_blueprint(admin_ai_submissions)
+    register_admin_plugin_menu_bar(title="AI Submissions", route="/admin/ai-submissions")
 
     CHALLENGE_CLASSES["standard"] = AiSubmissionStandardChallenge
     CHALLENGE_CLASSES["dynamic"] = AiSubmissionDynamicChallenge
