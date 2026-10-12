@@ -87,103 +87,107 @@
     }
   }
 
-  function setupApiInterceptor() {
-    if (!window.CTFd || !window.CTFd.api || typeof window.CTFd.api.post_challenge_attempt !== "function") {
-      setTimeout(setupApiInterceptor, 100);
-      return;
+  // Collect & Upload Metadata before submitting attempt
+  async function prepareSubmissionMetadata() {
+    var aiInput = document.querySelector("#challenge-ai-link");
+    var ai_link = aiInput ? String(aiInput.value || "").trim() : "";
+
+    if (ai_link === "") {
+      showAlert("Link percakapan AI wajib diisi sebelum submit flag.");
+      return null;
     }
 
-    var original = window.CTFd.api.post_challenge_attempt;
-    window.CTFd.api.post_challenge_attempt = async function (parameters, body) {
-      if (parameters && parameters.preview) {
-        return original.call(this, parameters, body);
+    if (!isValidAiUrl(ai_link)) {
+      showAlert("Link AI tidak valid! Hanya diperbolehkan link share resmi dari ChatGPT (chatgpt.com/share/...) atau Gemini (gemini.google.com/share/...).");
+      return null;
+    }
+
+    var fileInput = document.querySelector("#challenge-solver-file");
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+      showAlert("File solver wajib diunggah sebelum submit flag.");
+      return null;
+    }
+
+    var solverFile = fileInput.files[0];
+    if (!isValidExtension(solverFile.name)) {
+      showAlert("Format file solver ditolak! Hanya file berekstensi .py, .sh, atau .txt yang diperbolehkan.");
+      return null;
+    }
+
+    if (solverFile.size > 5 * 1024 * 1024) {
+      showAlert("Ukuran file solver melebihi batas 5MB.");
+      return null;
+    }
+
+    var formData = new FormData();
+    formData.append("solver_file", solverFile);
+
+    try {
+      var uploadRes = await fetch("/api/v1/plugins/ai_submissions/upload-solver", {
+        method: "POST",
+        headers: {
+          "CSRF-Token": (window.init && window.init.csrfNonce) || ""
+        },
+        body: formData
+      });
+
+      var uploadData = await uploadRes.json();
+      if (!uploadRes.ok || !uploadData.success) {
+        showAlert("Gagal mengunggah file solver: " + (uploadData.error || "Server error"));
+        return null;
       }
 
-      var aiInput = document.querySelector("#challenge-ai-link");
-      var ai_link = aiInput ? String(aiInput.value || "").trim() : "";
+      return {
+        ai_link: ai_link,
+        solver_file: uploadData.stored_filename,
+        solver_name: uploadData.original_filename
+      };
+    } catch (err) {
+      showAlert("Terjadi kesalahan jaringan saat mengunggah file solver.");
+      return null;
+    }
+  }
 
-      if (ai_link === "") {
-        showAlert("Link percakapan AI wajib diisi sebelum submit flag.");
-        return Promise.resolve({
-          success: true,
-          data: { status: "incorrect", message: "Link percakapan AI wajib diisi sebelum submit flag." },
-        });
-      }
+  // Intercept via window.fetch to catch ALL requests to /api/v1/challenges/attempt
+  var origFetch = window.fetch;
+  window.fetch = async function (resource, options) {
+    var url = typeof resource === "string" ? resource : (resource && resource.url ? resource.url : "");
 
-      if (!isValidAiUrl(ai_link)) {
-        showAlert("Link AI tidak diizinkan! Hanya diperbolehkan link share resmi dari ChatGPT (chatgpt.com/share/...) atau Gemini (gemini.google.com/share/...).");
-        return Promise.resolve({
-          success: true,
-          data: { status: "incorrect", message: "Link percakapan AI wajib diisi sebelum submit flag." },
-        });
-      }
-
-      var fileInput = document.querySelector("#challenge-solver-file");
-      if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
-        showAlert("File solver wajib diunggah sebelum submit flag.");
-        return Promise.resolve({
-          success: true,
-          data: { status: "incorrect", message: "Link percakapan AI wajib diisi sebelum submit flag." },
-        });
-      }
-
-      var solverFile = fileInput.files[0];
-      if (!isValidExtension(solverFile.name)) {
-        showAlert("Format file solver ditolak! Hanya file berekstensi .py, .sh, atau .txt yang diperbolehkan.");
-        return Promise.resolve({
-          success: true,
-          data: { status: "incorrect", message: "Link percakapan AI wajib diisi sebelum submit flag." },
-        });
-      }
-
-      if (solverFile.size > 5 * 1024 * 1024) {
-        showAlert("Ukuran file solver melebihi batas 5MB.");
-        return Promise.resolve({
-          success: true,
-          data: { status: "incorrect", message: "Link percakapan AI wajib diisi sebelum submit flag." },
-        });
-      }
-
-      // Upload solver file
-      var formData = new FormData();
-      formData.append("solver_file", solverFile);
-
-      try {
-        var uploadRes = await fetch("/api/v1/plugins/ai_submissions/upload-solver", {
-          method: "POST",
-          headers: {
-            "CSRF-Token": (window.init && window.init.csrfNonce) || ""
-          },
-          body: formData
-        });
-
-        var uploadData = await uploadRes.json();
-        if (!uploadRes.ok || !uploadData.success) {
-          showAlert("Gagal mengunggah file solver: " + (uploadData.error || "Server error"));
-          return Promise.resolve({
+    if (url.indexOf("/api/v1/challenges/attempt") !== -1 && options && options.method === "POST") {
+      // Check if preview
+      if (url.indexOf("preview=true") === -1) {
+        var metadata = await prepareSubmissionMetadata();
+        if (!metadata) {
+          // Return simulated 200 response with data.status="incorrect" so theme doesn't crash!
+          return new Response(JSON.stringify({
             success: true,
-            data: { status: "unknown", message: "" },
+            data: {
+              status: "incorrect",
+              message: "Silakan lengkapi link AI dan file solver."
+            }
+          }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" }
           });
         }
 
-        body = body || {};
-        body.ai_link = ai_link;
-        body.solver_file = uploadData.stored_filename;
-        body.solver_name = uploadData.original_filename;
-
-        return original.call(this, parameters, body);
-      } catch (err) {
-        showAlert("Terjadi kesalahan jaringan saat mengunggah file solver.");
-        return Promise.resolve({
-          success: true,
-          data: { status: "incorrect", message: "Link percakapan AI wajib diisi sebelum submit flag." },
-        });
+        // Attach metadata to JSON payload
+        try {
+          var payload = typeof options.body === "string" ? JSON.parse(options.body) : {};
+          payload.ai_link = metadata.ai_link;
+          payload.solver_file = metadata.solver_file;
+          payload.solver_name = metadata.solver_name;
+          options.body = JSON.stringify(payload);
+        } catch (e) {
+          console.error("Failed to inject AI metadata into attempt body", e);
+        }
       }
-    };
-  }
+    }
 
-  setupApiInterceptor();
+    return origFetch.call(this, resource, options);
+  };
 
+  // Watch for modal events
   document.addEventListener("shown.bs.modal", function (e) {
     if (e.target && e.target.id === "challenge-window") {
       ensureInputs();
