@@ -279,6 +279,22 @@ def validate_and_swap():
             400,
         )
 
+    # Restrict strictly to ChatGPT and Gemini Free share links
+    host = parsed.netloc.lower()
+    path = parsed.path
+    is_chatgpt = (host == "chatgpt.com" or host.endswith(".chatgpt.com") or host == "chat.openai.com") and path.startswith("/share/")
+    is_gemini = host == "gemini.google.com" and path.startswith("/share/")
+    if not (is_chatgpt or is_gemini):
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "errors": {"ai_link": ["Link AI tidak valid! Hanya diperbolehkan link share resmi dari ChatGPT (chatgpt.com/share/...) atau Gemini (gemini.google.com/share/...)"]},
+                }
+            ),
+            400,
+        )
+
     if not solver_file:
         return (
             jsonify(
@@ -311,6 +327,11 @@ def upload_solver_file():
     file.seek(0)
     if file_size > 5 * 1024 * 1024:
         return jsonify({"success": False, "error": "Ukuran file melebihi batas 5MB"}), 400
+
+    # Strict extension validation: .py, .sh, .txt only
+    ext = os.path.splitext(file.filename)[1].lower()
+    if ext not in (".py", ".sh", ".txt"):
+        return jsonify({"success": False, "error": "Format file tidak diizinkan! Hanya diperbolehkan file .py, .sh, atau .txt"}), 400
 
     user = get_current_user()
     orig_filename = os.path.basename(file.filename)
