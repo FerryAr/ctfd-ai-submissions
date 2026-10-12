@@ -191,7 +191,11 @@ def patch_dynamic_iac():
 
             @classmethod
             def solve_hook(c, user, team, challenge, request):
-                orig_solve(user, team, challenge, request)
+                try:
+                    orig_solve(user, team, challenge, request)
+                except Exception as e:
+                    pass
+
                 try:
                     ai_link, solver_file, solver_name = AiSubmissionStandardChallenge._get_metadata(request)
                     last_solve = Solves.query.filter_by(
@@ -209,6 +213,25 @@ def patch_dynamic_iac():
                         db.session.commit()
                 except Exception:
                     db.session.rollback()
+
+                # Safety guarantee: ensure instance is destroyed if destroy_on_flag is enabled
+                try:
+                    from CTFd.plugins.ctfd_chall_manager.models import DynamicIaCChallenge
+                    from CTFd.plugins.ctfd_chall_manager.utils.instance_manager import delete_instance
+                    from CTFd.utils.config import is_teams_mode
+
+                    c_iac = DynamicIaCChallenge.query.filter_by(id=challenge.id).first()
+                    if c_iac and getattr(c_iac, "destroy_on_flag", False):
+                        source_id = user.id
+                        if is_teams_mode() and team:
+                            source_id = team.id
+                        elif is_teams_mode() and getattr(user, "team_id", None):
+                            source_id = user.team_id
+                        if getattr(c_iac, "shared", False):
+                            source_id = 0
+                        delete_instance(challenge.id, source_id)
+                except Exception:
+                    pass
 
             cls.solve = solve_hook
 
