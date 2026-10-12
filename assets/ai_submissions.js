@@ -154,14 +154,16 @@
       return null;
     }
 
+    var csrfNonce = (window.init && window.init.csrfNonce) || "";
     var formData = new FormData();
     formData.append("solver_file", solverFile);
+    formData.append("nonce", csrfNonce);
 
     try {
       var uploadRes = await origFetch("/api/v1/plugins/ai_submissions/upload-solver", {
         method: "POST",
         headers: {
-          "CSRF-Token": (window.init && window.init.csrfNonce) || ""
+          "CSRF-Token": csrfNonce
         },
         body: formData
       });

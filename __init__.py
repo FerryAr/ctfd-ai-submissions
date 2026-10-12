@@ -332,6 +332,7 @@ admin_ai_submissions = Blueprint(
 @admin_ai_submissions.route("/api/v1/plugins/ai_submissions/upload-solver", methods=["POST"])
 @authed_only
 def upload_solver_file():
+    upload_solver_file._bypass_csrf = True
     if "solver_file" not in request.files:
         return jsonify({"success": False, "error": "Tidak ada file yang dipilih"}), 400
 
@@ -454,4 +455,5 @@ def load(app):
     CHALLENGE_CLASSES["dynamic"] = AiSubmissionDynamicChallenge
     patch_dynamic_iac()
 
+    upload_solver_file._bypass_csrf = True
     app.before_request(validate_and_swap)
