@@ -432,10 +432,15 @@ def admin_ai_submissions_listing():
         page=page, per_page=50, error_out=False
     )
 
+    args = dict(request.args)
+    args.pop("page", 1)
+
     return render_template(
         "ai_submissions.html",
         submissions=pagination.items,
         pagination=pagination,
+        prev_page=url_for(request.endpoint, page=pagination.prev_num, **args) if pagination.has_prev else None,
+        next_page=url_for(request.endpoint, page=pagination.next_num, **args) if pagination.has_next else None,
         type=submission_type,
         q=q,
     )
